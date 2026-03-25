@@ -1,1 +1,3 @@
-# insurance-claim-fraud-detection-platform-3118
+# Project Repository
+
+This is the initial README file for the project.
