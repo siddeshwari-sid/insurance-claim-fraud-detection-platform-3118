@@ -344,6 +344,13 @@ class ClaimsController {
   getExplanationById(req, res) {
     /**
      * Fetch explanation for claim id.
+     *
+     * Consistency requirement:
+     * - This endpoint must not "re-score" a claim in a way that can disagree with the
+     *   fraud_score and fraud_signals returned by GET /claims/:id.
+     * - Therefore, if the claim already has stored fraud_score/fraud_signals, we use
+     *   those as the source of truth when generating the explanation.
+     *
      * Will generate on-demand if missing.
      *
      * @param {import('express').Request} req
@@ -357,8 +364,19 @@ class ClaimsController {
     }
 
     const claim = this._claims[idx];
+
     if (!this._explanations.has(claimId)) {
-      const scoreResult = scoringService.scoreClaim(claim);
+      // Use stored score/signals if present; only score if they're missing.
+      const hasStoredScore = Number.isFinite(Number(claim?.fraud_score));
+      const hasStoredSignals = Array.isArray(claim?.fraud_signals);
+
+      const scoreResult = (hasStoredScore || hasStoredSignals)
+        ? {
+            fraud_score: hasStoredScore ? Number(claim.fraud_score) : 0,
+            fraud_signals: hasStoredSignals ? claim.fraud_signals : [],
+          }
+        : scoringService.scoreClaim(claim);
+
       this._ensureExplanation(claim, scoreResult);
     }
 
