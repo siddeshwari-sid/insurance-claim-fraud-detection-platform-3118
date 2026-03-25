@@ -1,6 +1,8 @@
 const express = require('express');
 const healthController = require('../controllers/health');
 const claimsRouter = require('./claims');
+const uploadRouter = require('./upload');
+const explanationRouter = require('./explanation');
 
 const router = express.Router();
 
@@ -11,6 +13,10 @@ const router = express.Router();
  *     description: Service health endpoints
  *   - name: Claims
  *     description: Claims CRUD endpoints
+ *   - name: Upload
+ *     description: CSV ingest endpoints
+ *   - name: Explanation
+ *     description: Explanation endpoints
  */
 
 /**
@@ -44,6 +50,8 @@ const router = express.Router();
 router.get('/', healthController.check.bind(healthController));
 
 router.use('/claims', claimsRouter);
+router.use('/upload_csv', uploadRouter);
+router.use('/explanation', explanationRouter);
 
 /**
  * JSON 404 for any non-matched routes mounted under "/".
