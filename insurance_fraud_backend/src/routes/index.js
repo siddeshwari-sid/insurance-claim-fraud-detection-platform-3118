@@ -4,6 +4,7 @@ const claimsRouter = require('./claims');
 const uploadRouter = require('./upload');
 const explanationRouter = require('./explanation');
 const fraudSignalsRouter = require('./fraudSignals');
+const swaggerSpec = require('../../swagger');
 
 const router = express.Router();
 
@@ -21,6 +22,59 @@ const router = express.Router();
  *   - name: Fraud Signals
  *     description: Fraud signal catalog endpoints
  */
+
+/**
+ * @swagger
+ * /openapi.json:
+ *   get:
+ *     summary: Get OpenAPI spec (JSON)
+ *     description: Returns the generated OpenAPI/Swagger specification document as JSON.
+ *     tags:
+ *       - Health
+ *     responses:
+ *       200:
+ *         description: OpenAPI specification JSON
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ */
+// PUBLIC_INTERFACE
+router.get('/openapi.json', (req, res) => {
+  /**
+   * Serve OpenAPI/Swagger spec JSON.
+   *
+   * This mirrors the behavior of the /docs setup in src/app.js by dynamically
+   * setting the `servers` URL based on the incoming request.
+   *
+   * @param {import('express').Request} req
+   * @param {import('express').Response} res
+   * @returns {import('express').Response} OpenAPI JSON
+   */
+  const host = req.get('host'); // may or may not include port
+  let protocol = req.protocol; // http or https
+
+  const actualPort = req.socket.localPort;
+  const hasPort = host.includes(':');
+
+  const needsPort =
+    !hasPort &&
+    ((protocol === 'http' && actualPort !== 80) ||
+      (protocol === 'https' && actualPort !== 443));
+  const fullHost = needsPort ? `${host}:${actualPort}` : host;
+  protocol = req.secure ? 'https' : protocol;
+
+  const dynamicSpec = {
+    ...swaggerSpec,
+    servers: [
+      {
+        url: `${protocol}://${fullHost}`,
+      },
+    ],
+  };
+
+  return res.status(200).json(dynamicSpec);
+});
 
 /**
  * @swagger
