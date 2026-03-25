@@ -25,6 +25,54 @@ function maybeDate(s) {
 
 class ScoringService {
   // PUBLIC_INTERFACE
+  getFraudSignalsCatalog() {
+    /**
+     * Return a stable catalog of fraud signals that may be emitted by scoreClaim().
+     * This intentionally does not include detailed rule logic, thresholds, or implementation details.
+     *
+     * @returns {Array<{code:string, severity:'low'|'medium'|'high', points?:number, message:string}>}
+     */
+    return [
+      {
+        code: 'HIGH_AMOUNT',
+        severity: 'high',
+        points: 35,
+        message: 'Claim amount is unusually high.',
+      },
+      {
+        code: 'ELEVATED_AMOUNT',
+        severity: 'medium',
+        points: 18,
+        message: 'Claim amount is elevated.',
+      },
+      {
+        code: 'SUSPICIOUS_KEYWORDS',
+        severity: 'medium',
+        // points vary based on keyword count; omit or keep as a representative max/min could confuse UI
+        message: 'Narrative contains suspicious keywords.',
+      },
+      {
+        code: 'RECENT_LOSS_DATE',
+        severity: 'low',
+        points: 10,
+        message: 'Loss date is very recent.',
+      },
+      {
+        code: 'MISSING_FIELDS',
+        severity: 'low',
+        // points vary based on number of missing fields
+        message: 'Claim is missing key fields.',
+      },
+      {
+        code: 'ESCALATED_STATUS',
+        severity: 'low',
+        points: 8,
+        message: 'Claim is already escalated in workflow.',
+      },
+    ];
+  }
+
+  // PUBLIC_INTERFACE
   scoreClaim(claim) {
     /**
      * Score a claim and return fraud_score and fraud_signals.

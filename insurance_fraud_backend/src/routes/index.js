@@ -3,6 +3,7 @@ const healthController = require('../controllers/health');
 const claimsRouter = require('./claims');
 const uploadRouter = require('./upload');
 const explanationRouter = require('./explanation');
+const fraudSignalsRouter = require('./fraudSignals');
 
 const router = express.Router();
 
@@ -17,6 +18,8 @@ const router = express.Router();
  *     description: CSV ingest endpoints
  *   - name: Explanation
  *     description: Explanation endpoints
+ *   - name: Fraud Signals
+ *     description: Fraud signal catalog endpoints
  */
 
 /**
@@ -50,6 +53,7 @@ const router = express.Router();
 router.get('/', healthController.check.bind(healthController));
 
 router.use('/claims', claimsRouter);
+router.use('/fraud_signals', fraudSignalsRouter);
 router.use('/upload_csv', uploadRouter);
 router.use('/explanation', explanationRouter);
 
