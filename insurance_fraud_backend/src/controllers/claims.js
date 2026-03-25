@@ -129,6 +129,21 @@ class ClaimsController {
       });
     }
 
+    // Queue expectation: highest fraud_score first.
+    // Use stable numeric coercion and deterministic tie-breakers for consistent UI ordering.
+    data.sort((a, b) => {
+      const as = toNumber(a?.fraud_score ?? a?.score ?? a?.riskScore ?? a?.risk_score, 0);
+      const bs = toNumber(b?.fraud_score ?? b?.score ?? b?.riskScore ?? b?.risk_score, 0);
+      if (bs !== as) return bs - as;
+
+      const at = Date.parse(a?.createdAt || a?.updatedAt || '') || 0;
+      const bt = Date.parse(b?.createdAt || b?.updatedAt || '') || 0;
+      if (bt !== at) return bt - at;
+
+      // Final deterministic tie-breaker
+      return String(b?.id || '').localeCompare(String(a?.id || ''));
+    });
+
     return res.status(200).json({
       status: 'ok',
       data,
