@@ -1,4 +1,5 @@
 const { v4: uuidv4 } = require("uuid");
+const { scoreClaim } = require("../services/fraudEngine");
 
 /**
  * Simple in-memory store for claims.
@@ -10,6 +11,7 @@ class ClaimsStore {
     this._claims = new Map();
 
     // Seed a couple of claims for the UI to render immediately.
+    // Important: score seeds so the UI queue + sorting by fraud_score works out-of-the-box.
     const seed1 = this.create({
       claimant_name: "Alex Johnson",
       claim_amount: 18500,
@@ -31,8 +33,10 @@ class ClaimsStore {
     });
 
     // Ensure seeded claims are scored
-    this.upsert(seed1.id, seed1);
-    this.upsert(seed2.id, seed2);
+    for (const seed of [seed1, seed2]) {
+      const { fraud_score, signals } = scoreClaim(seed);
+      this.upsert(seed.id, { ...seed, fraud_score, signals });
+    }
   }
 
   /**

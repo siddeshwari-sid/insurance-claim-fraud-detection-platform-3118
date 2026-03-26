@@ -22,7 +22,21 @@ const router = express.Router();
  *                 $ref: '#/components/schemas/Claim'
  */
 router.get("/", (req, res) => {
-  res.json(claimsStore.list());
+  const sorted = claimsStore
+    .list()
+    .slice()
+    .sort((a, b) => {
+      const sa = Number(a?.fraud_score ?? 0);
+      const sb = Number(b?.fraud_score ?? 0);
+      if (sb !== sa) return sb - sa;
+
+      // Tie-breaker: most recently submitted first
+      const da = new Date(a?.submission_date || 0).getTime();
+      const db = new Date(b?.submission_date || 0).getTime();
+      return db - da;
+    });
+
+  res.json(sorted);
 });
 
 /**
