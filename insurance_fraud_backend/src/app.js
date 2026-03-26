@@ -47,21 +47,30 @@ function createApp() {
 
   const corsMaxAge = Number(process.env.CORS_MAX_AGE || 3600);
 
+  // In hosted previews, frontend and backend are on different origins.
+  // If `credentials: true`, browsers require a non-wildcard ACAO header and may block requests.
+  // Default to credentials=false (safer/easier for demo). You can enable it explicitly via env.
+  const corsCredentials =
+    (process.env.CORS_CREDENTIALS || "").toLowerCase() === "true";
+
   app.use(
     cors({
       origin: (origin, cb) => {
         // Allow server-to-server and same-origin requests with no Origin header
         if (!origin) return cb(null, true);
 
-        // If no explicit origins configured, allow all (developer-friendly)
-        if (allowedOrigins.length === 0) return cb(null, true);
+        // If no explicit origins configured, allow all (developer-friendly).
+        // When credentials are enabled, we must reflect the requesting origin.
+        if (allowedOrigins.length === 0) {
+          return cb(null, corsCredentials ? origin : true);
+        }
 
-        if (allowedOrigins.includes(origin)) return cb(null, true);
+        if (allowedOrigins.includes(origin)) return cb(null, origin);
         return cb(new Error(`CORS: Origin not allowed: ${origin}`));
       },
       methods: allowedMethods,
       allowedHeaders,
-      credentials: true,
+      credentials: corsCredentials,
       maxAge: Number.isFinite(corsMaxAge) ? corsMaxAge : 3600
     })
   );
